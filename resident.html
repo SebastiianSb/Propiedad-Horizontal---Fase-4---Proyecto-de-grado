@@ -75,8 +75,8 @@
 
 <div class="app-shell">
 
-  <!-- ════ SIDEBAR (Desktop) ════ -->
-  <aside class="sidebar desktop-only" id="sidebar">
+  <!-- ════ SIDEBAR ════ -->
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
         <div class="sidebar-logo-icon" style="font-size:0;">
@@ -135,7 +135,7 @@
     <!-- HEADER -->
     <header class="top-header">
       <div class="top-header-left">
-        <button class="hamburger-btn desktop-only" id="hamburger-btn" aria-label="Abrir menú">
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Abrir menú">
           <i data-feather="menu" style="width:18px;height:18px;"></i>
         </button>
         <div>
@@ -152,14 +152,14 @@
           <i data-feather="bell" style="width:18px;height:18px;stroke-width:1.8;"></i>
           <span class="badge">2</span>
         </button>
+        <button class="notif-btn hide-on-desktop" onclick="window.location.href='index.html'" style="font-size:0;" aria-label="Cerrar sesión">
+          <i data-feather="log-out" style="width:18px;height:18px;stroke-width:1.8;"></i>
+        </button>
         <div class="avatar">SA</div>
       </div>
     </header>
 
-<div class="mobile-shell" style="min-height:auto;">
-
-  <!-- CONTENT -->
-  <div class="mobile-content">
+    <main class="page-content">
 
     <div class="mobile-greeting hide-on-desktop mb-4">
       <strong>¡Buenas, Sebastian!</strong>
@@ -469,45 +469,9 @@
       </div>
     </section>
 
+    </main>
+
   </div>
-
-  <!-- BOTTOM NAV -->
-  <nav class="bottom-nav hide-on-desktop">
-    <div class="bottom-nav-item active" data-nav="home">
-      <span class="nav-icon" style="font-size:0;display:flex;justify-content:center;">
-        <i data-feather="home" style="width:22px;height:22px;stroke-width:1.8;"></i>
-      </span>
-      <span class="nav-label">Inicio</span>
-    </div>
-    <div class="bottom-nav-item" data-nav="finances">
-      <span class="nav-icon" style="font-size:0;display:flex;justify-content:center;">
-        <i data-feather="dollar-sign" style="width:22px;height:22px;stroke-width:1.8;"></i>
-      </span>
-      <span class="nav-label">Cuotas</span>
-    </div>
-    <div class="bottom-nav-item" data-nav="news">
-      <span class="nav-icon" style="font-size:0;display:flex;justify-content:center;">
-        <i data-feather="bell" style="width:22px;height:22px;stroke-width:1.8;"></i>
-      </span>
-      <span class="nav-label">Noticias</span>
-      <span class="nav-dot"></span>
-    </div>
-    <div class="bottom-nav-item" data-nav="voting">
-      <span class="nav-icon" style="font-size:0;display:flex;justify-content:center;">
-        <i data-feather="check-square" style="width:22px;height:22px;stroke-width:1.8;"></i>
-      </span>
-      <span class="nav-label">Votar</span>
-    </div>
-    <div class="bottom-nav-item" data-nav="reservations">
-      <span class="nav-icon" style="font-size:0;display:flex;justify-content:center;">
-        <i data-feather="calendar" style="width:22px;height:22px;stroke-width:1.8;"></i>
-      </span>
-      <span class="nav-label">Reservas</span>
-    </div>
-  </nav>
-
-</div>
-</div>
 </div>
 
 <div id="toast-container" class="toast-container"></div>

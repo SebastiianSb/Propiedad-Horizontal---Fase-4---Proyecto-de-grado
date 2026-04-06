@@ -3,11 +3,26 @@
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
 
-  /* ── Bottom Nav SPA ── */
-  const navItems = document.querySelectorAll('.bottom-nav-item, .nav-item[data-nav]');
+  /* ── Sidebar SPA ── */
+  const navItems = document.querySelectorAll('.nav-item[data-nav]');
+  
+  const titles = {
+    'home': 'Portal del Residente',
+    'finances': 'Mis Cuotas',
+    'news': 'Comunicados',
+    'voting': 'Votaciones',
+    'reservations': 'Reservas'
+  };
+
+  function updateHeaderTitle(id) {
+    const el = document.getElementById('page-title');
+    if (el) el.textContent = titles[id] || 'Portal del Residente';
+  }
+
   navItems.forEach(item => {
     item.addEventListener('click', () => {
       navigate(item.dataset.nav, navItems);
+      updateHeaderTitle(item.dataset.nav);
       if (item.dataset.nav === 'finances') renderFinanceChart();
     });
   });
