@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administrador — CondominiumOS</title>
+  <meta name="description" content="Panel de administración del conjunto residencial." />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+  <style>
+    .upload-zone {
+      border: 1.5px dashed var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      color: var(--color-text-muted);
+    }
+    .upload-zone:hover { border-color: var(--color-primary); background: var(--color-primary-dim); color: var(--color-primary); }
+    .upload-zone .upload-icon { margin-bottom: var(--space-3); display:flex; justify-content:center; opacity:0.5; }
+
+    .filter-chip {
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius-full);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      color: var(--color-text-muted);
+    }
+    .filter-chip.active, .filter-chip:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: var(--color-surface);
+    }
+
+    .row-danger td { background: var(--color-danger-bg) !important; }
+    .row-warning td { background: var(--color-warning-bg) !important; }
+
+    .chart-box { position: relative; height: 260px; }
+    .fin-summary-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-4); }
+    @media (max-width: 900px) { .fin-summary-grid { grid-template-columns: 1fr; } }
+
+    /* icon-box used for nav */
+    .nav-item-icon-feather {
+      width: 34px; height: 34px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.05);
+    }
+    .nav-item-icon-feather svg { width: 16px; height: 16px; stroke-width: 1.7; }
+    .nav-item.active .nav-item-icon-feather { background: rgba(255,255,255,0.12); }
+
+    /* icon used in list-items and card headers */
+    .icon-box {
+      width: 38px; height: 38px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      flex-shrink: 0;
+      color: var(--color-text-muted);
+    }
+    .icon-box svg { width: 16px; height: 16px; stroke-width: 1.7; }
+    .icon-box.primary { color: var(--color-primary); border-color: var(--color-primary-light); }
+    .icon-box.success { color: var(--color-success); }
+    .icon-box.danger  { color: var(--color-danger); }
+    .icon-box.warning { color: var(--color-warning); }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<div class="app-shell">
+
+  <!-- ════ SIDEBAR ════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon" style="font-size:0;">
+          <i data-feather="grid" style="width:20px;height:20px;stroke:#fff;stroke-width:2;"></i>
+        </div>
+        <div class="sidebar-logo-text">
+          <strong>CondominiumOS</strong>
+          <span>Panel Admin</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Principal</span>
+
+      <div class="nav-item active" data-nav="admin-dashboard">
+        <div class="nav-item-icon-feather"><i data-feather="bar-chart-2"></i></div>
+        <span>Dashboard</span>
+      </div>
+      <div class="nav-item" data-nav="admin-financiero">
+        <div class="nav-item-icon-feather"><i data-feather="dollar-sign"></i></div>
+        <span>Financiero</span>
+      </div>
+      <div class="nav-item" data-nav="admin-residentes">
+        <div class="nav-item-icon-feather"><i data-feather="users"></i></div>
+        <span>Residentes</span>
+        <span class="nav-item-badge">3</span>
+      </div>
+
+      <span class="nav-section-label">Gestión</span>
+
+      <div class="nav-item" data-nav="admin-comunicados">
+        <div class="nav-item-icon-feather"><i data-feather="bell"></i></div>
+        <span>Comunicados</span>
+      </div>
+      <div class="nav-item" data-nav="admin-votaciones">
+        <div class="nav-item-icon-feather"><i data-feather="check-square"></i></div>
+        <span>Votaciones</span>
+      </div>
+      <div class="nav-item" data-nav="admin-documentos">
+        <div class="nav-item-icon-feather"><i data-feather="folder"></i></div>
+        <span>Documentos</span>
+      </div>
+      <div class="nav-item" data-nav="admin-reservas">
+        <div class="nav-item-icon-feather"><i data-feather="calendar"></i></div>
+        <span>Reservas</span>
+      </div>
+
+      <span class="nav-section-label">Sistema</span>
+
+      <div class="nav-item" data-nav="admin-config">
+        <div class="nav-item-icon-feather"><i data-feather="settings"></i></div>
+        <span>Configuración</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" onclick="window.location.href='index.html'">
+        <div class="avatar">MA</div>
+        <div class="sidebar-user-info">
+          <strong>María Administrador</strong>
+          <span>Administradora</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ════ MAIN CONTENT ════ -->
+  <div class="main-content">
+
+    <header class="top-header">
+      <div class="top-header-left">
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Abrir menú">
+          <i data-feather="menu" style="width:18px;height:18px;"></i>
+        </button>
+        <div>
+          <div class="header-title" id="admin-page-title">Dashboard</div>
+          <div class="header-subtitle">Conjunto El Pinar · Abril 2026</div>
+        </div>
+      </div>
+      <div class="top-header-right">
+        <label class="theme-toggle" for="theme-cb-admin">
+          <input type="checkbox" id="theme-cb-admin" class="theme-checkbox" />
+          <div class="theme-toggle-track"><div class="theme-toggle-thumb" style="font-size:0;"></div></div>
+        </label>
+        <button class="notif-btn" id="notif-admin-btn" style="font-size:0;">
+          <i data-feather="bell" style="width:18px;height:18px;stroke-width:1.8;"></i>
+          <span class="badge">5</span>
+        </button>
+        <div class="avatar">MA</div>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <!-- ══ DASHBOARD ══ -->
+      <section class="page-section active" id="admin-dashboard">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="section-title">Resumen General</h1>
+            <p class="section-subtitle">Métricas en tiempo real del conjunto</p>
+          </div>
+          <button class="btn btn-primary" data-modal-open="modal-quick-action">Nueva acción</button>
+        </div>
+
+        <div class="grid grid-4 stats-row gap-4 mb-6">
+          <div class="stat-card primary">
+            <div class="stat-icon primary"><i data-feather="home"></i></div>
+            <div class="stat-value">128</div>
+            <div class="stat-label">Total Unidades</div>
+            <div class="stat-trend text-success">2 nuevos propietarios</div>
+          </div>
+          <div class="stat-card success">
+            <div class="stat-icon success"><i data-feather="check-circle"></i></div>
+            <div class="stat-value">87<small style="font-size:1rem">%</small></div>
+            <div class="stat-label">Cartera al día</div>
+            <div class="stat-trend text-success">+3% vs mes anterior</div>
+          </div>
+          <div class="stat-card danger">
+            <div class="stat-icon danger"><i data-feather="alert-circle"></i></div>
+            <div class="stat-value">17</div>
+            <div class="stat-label">En mora</div>
+            <div class="stat-trend text-danger">−2 respecto a marzo</div>
+          </div>
+          <div class="stat-card warning">
+            <div class="stat-icon warning"><i data-feather="clock"></i></div>
+            <div class="stat-value">$12M</div>
+            <div class="stat-label">Cartera vencida</div>
+            <div class="stat-trend text-warning">Requiere gestión</div>
+          </div>
+        </div>
+
+        <div class="grid grid-2 gap-4 mb-6">
+          <div class="card">
+            <div class="card-header">
+              <span class="font-semibold">Cartera Morosa</span>
+              <span class="badge badge-neutral">Abril 2026</span>
+            </div>
+            <div class="card-body">
+              <div class="chart-box"><canvas id="chart-cartera"></canvas></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="font-semibold">Recaudación Mensual</span>
+              <span class="badge badge-success">+8% anual</span>
+            </div>
+            <div class="card-body">
+              <div class="chart-box"><canvas id="chart-recaudacion"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="font-semibold">Actividad Reciente</span>
+            <button class="btn btn-sm btn-secondary">Ver todo</button>
+          </div>
+          <div class="card-body p-0">
+            <div class="timeline p-5">
+              <div class="timeline-item">
+                <div class="timeline-time">Hoy, 09:42 a.m.</div>
+                <div class="timeline-content">
+                  <div class="flex items-center gap-2 mb-1"><span class="badge badge-success">Pago</span></div>
+                  <p class="text-sm"><strong>Apto 302</strong> — Cuota de administración Abril 2026 · $280,000</p>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-time">Hoy, 08:15 a.m.</div>
+                <div class="timeline-content">
+                  <div class="flex items-center gap-2 mb-1"><span class="badge badge-warning">Solicitud</span></div>
+                  <p class="text-sm"><strong>Apto 108</strong> — Solicitud de reserva Salón Comunal · Sáb 12 Abr</p>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-time">Ayer, 04:20 p.m.</div>
+                <div class="timeline-content">
+                  <div class="flex items-center gap-2 mb-1"><span class="badge badge-danger">Mora</span></div>
+                  <p class="text-sm"><strong>Apto 214</strong> — Pasó a mora +90 días. Saldo: $840,000</p>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-time">Ayer, 11:00 a.m.</div>
+                <div class="timeline-content">
+                  <div class="flex items-center gap-2 mb-1"><span class="badge badge-primary">Comunicado</span></div>
+                  <p class="text-sm">Se publicó: "Mantenimiento ascensor — 10 Abr"</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ FINANCIERO ══ -->
+      <section class="page-section" id="admin-financiero">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="section-title">Estado Financiero</h1>
+            <p class="section-subtitle">Ingresos, egresos y cartera morosa</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary">Exportar</button>
+            <button class="btn btn-primary">Registrar movimiento</button>
+          </div>
+        </div>
+
+        <div class="fin-summary-grid mb-6">
+          <div class="card">
+            <div class="card-body">
+              <div class="stat-icon success" style="margin-bottom:var(--space-3)"><i data-feather="trending-up"></i></div>
+              <div class="text-2xl font-extrabold text-success">$23,100,000</div>
+              <div class="text-sm text-muted mt-1">Ingresos — Dic 2025</div>
+              <div class="progress-bar-container mt-3"><div class="progress-bar success" style="width:87%"></div></div>
+              <div class="text-xs text-muted mt-1">87% recaudado vs presupuesto</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <div class="stat-icon danger" style="margin-bottom:var(--space-3)"><i data-feather="trending-down"></i></div>
+              <div class="text-2xl font-extrabold text-danger">$18,400,000</div>
+              <div class="text-sm text-muted mt-1">Egresos — Dic 2025</div>
+              <div class="progress-bar-container mt-3"><div class="progress-bar danger" style="width:72%"></div></div>
+              <div class="text-xs text-muted mt-1">72% del presupuesto ejecutado</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <div class="stat-icon primary" style="margin-bottom:var(--space-3)"><i data-feather="activity"></i></div>
+              <div class="text-2xl font-extrabold">$4,700,000</div>
+              <div class="text-sm text-muted mt-1">Excedente del período</div>
+              <div class="progress-bar-container mt-3"><div class="progress-bar" style="width:56%"></div></div>
+              <div class="text-xs text-muted mt-1">Fondo de reserva: 56% constituido</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-2 gap-4 mb-6">
+          <div class="card">
+            <div class="card-header">
+              <span class="font-semibold">Distribución de Gastos</span>
+            </div>
+            <div class="card-body">
+              <div class="chart-box"><canvas id="chart-gastos"></canvas></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="font-semibold">Mayores Morosos</span>
+              <span class="badge badge-danger">17 en mora</span>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-container" style="border:none;border-radius:0;">
+                <table class="data-table">
+                  <thead><tr><th>Apto</th><th>Residente</th><th>Días</th><th>Saldo</th><th>Estado</th></tr></thead>
+                  <tbody>
+                    <tr class="row-danger">
+                      <td><strong>214</strong></td><td>Carlos R.</td>
+                      <td><span class="badge badge-danger">+90d</span></td>
+                      <td class="font-semibold text-danger">$840,000</td>
+                      <td><span class="badge badge-danger">Crítico</span></td>
+                    </tr>
+                    <tr class="row-warning">
+                      <td><strong>507</strong></td><td>Laura M.</td>
+                      <td><span class="badge badge-warning">45d</span></td>
+                      <td class="font-semibold">$560,000</td>
+                      <td><span class="badge badge-warning">Alerta</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>110</strong></td><td>Pedro G.</td>
+                      <td><span class="badge badge-neutral">15d</span></td>
+                      <td>$280,000</td>
+                      <td><span class="badge badge-neutral">Leve</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>308</strong></td><td>Ana L.</td>
+                      <td><span class="badge badge-neutral">10d</span></td>
+                      <td>$280,000</td>
+                      <td><span class="badge badge-neutral">Leve</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button class="btn btn-sm btn-danger w-full">Enviar cobros masivos</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ RESIDENTES ══ -->
+      <section class="page-section" id="admin-residentes">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="section-title">Gestión de Residentes</h1>
+            <p class="section-subtitle">128 unidades registradas</p>
+          </div>
+          <button class="btn btn-primary" data-modal-open="modal-new-resident">Nuevo residente</button>
+        </div>
+
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="flex gap-3 flex-wrap">
+              <div class="search-bar flex-1" style="min-width:220px">
+                <span class="search-icon" style="display:flex;"><i data-feather="search" style="width:16px;height:16px;stroke-width:1.8;"></i></span>
+                <input id="user-search" type="search" placeholder="Buscar residente o apto..." />
+              </div>
+              <button class="filter-chip active">Todos</button>
+              <button class="filter-chip">Al día</button>
+              <button class="filter-chip">En mora</button>
+              <button class="filter-chip">Propietarios</button>
+              <button class="filter-chip">Arrendatarios</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-container" style="border:none;">
+            <table class="data-table">
+              <thead>
+                <tr><th>Residente</th><th>Apto</th><th>Tipo</th><th>Teléfono</th><th>Estado</th><th>Acciones</th></tr>
+              </thead>
+              <tbody id="users-tbody">
+                <tr>
+                  <td><div class="flex items-center gap-2"><div class="avatar" style="width:32px;height:32px;font-size:0.75rem;">JP</div><strong>Juan Pérez</strong></div></td>
+                  <td>101</td><td><span class="badge badge-primary">Propietario</span></td><td>311 000 0000</td>
+                  <td><span class="badge badge-success">Al día</span></td>
+                  <td><button class="btn btn-sm btn-secondary">Ver</button></td>
+                </tr>
+                <tr>
+                  <td><div class="flex items-center gap-2"><div class="avatar" style="width:32px;height:32px;font-size:0.75rem;">MG</div><strong>María García</strong></div></td>
+                  <td>205</td><td><span class="badge badge-neutral">Arrendatario</span></td><td>300 111 2222</td>
+                  <td><span class="badge badge-success">Al día</span></td>
+                  <td><button class="btn btn-sm btn-secondary">Ver</button></td>
+                </tr>
+                <tr class="row-danger">
+                  <td><div class="flex items-center gap-2"><div class="avatar" style="width:32px;height:32px;font-size:0.75rem;">CR</div><strong>Carlos Rodríguez</strong></div></td>
+                  <td>214</td><td><span class="badge badge-primary">Propietario</span></td><td>320 333 4444</td>
+                  <td><span class="badge badge-danger">Mora 90d+</span></td>
+                  <td><button class="btn btn-sm btn-danger">Cobrar</button></td>
+                </tr>
+                <tr>
+                  <td><div class="flex items-center gap-2"><div class="avatar" style="width:32px;height:32px;font-size:0.75rem;">AT</div><strong>Ana Torres</strong></div></td>
+                  <td>312</td><td><span class="badge badge-primary">Propietario</span></td><td>315 555 6666</td>
+                  <td><span class="badge badge-success">Al día</span></td>
+                  <td><button class="btn btn-sm btn-secondary">Ver</button></td>
+                </tr>
+                <tr class="row-warning">
+                  <td><div class="flex items-center gap-2"><div class="avatar" style="width:32px;height:32px;font-size:0.75rem;">LM</div><strong>Laura Martínez</strong></div></td>
+                  <td>507</td><td><span class="badge badge-neutral">Arrendatario</span></td><td>318 777 8888</td>
+                  <td><span class="badge badge-warning">Mora 45d</span></td>
+                  <td><button class="btn btn-sm btn-warning">Cobrar</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ COMUNICADOS ══ -->
+      <section class="page-section" id="admin-comunicados">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="section-title">Comunicados</h1>
+            <p class="section-subtitle">Publica noticias y avisos para los residentes</p>
+          </div>
+        </div>
+
+        <div class="grid grid-2 gap-6">
+          <div class="card">
+            <div class="card-header"><span class="font-semibold">Nuevo comunicado</span></div>
+            <div class="card-body">
+              <form id="comm-form">
+                <div class="form-group mb-4">
+                  <label class="form-label">Tipo</label>
+                  <select id="comm-type" class="form-control">
+                    <option value="info">Información</option>
+                    <option value="alerta">Alerta</option>
+                    <option value="aviso">Aviso</option>
+                    <option value="general">General</option>
+                  </select>
+                </div>
+                <div class="form-group mb-4">
+                  <label class="form-label">Título</label>
+                  <input id="comm-title" type="text" class="form-control" placeholder="Ej: Mantenimiento ascensor" required />
+                </div>
+                <div class="form-group mb-4">
+                  <label class="form-label">Mensaje</label>
+                  <textarea class="form-control" rows="4" placeholder="Escribe el contenido del comunicado..."></textarea>
+                </div>
+                <div class="form-group mb-4">
+                  <label class="form-label">Destinatarios</label>
+                  <select class="form-control">
+                    <option>Todos los residentes</option>
+                    <option>Solo propietarios</option>
+                    <option>Solo torres A-B</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Publicar comunicado</button>
+              </form>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="font-semibold mb-3">Comunicados publicados</h3>
+            <div id="comm-feed">
+              <div class="card mb-3">
+                <div class="card-body">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="badge badge-warning news-badge aviso">Aviso</span>
+                    <span class="text-xs text-muted">05 Abr 2026</span>
+                  </div>
+                  <h4 class="font-semibold">Mantenimiento ascensor — 10 Abr</h4>
+                  <p class="text-sm text-muted mt-1">El ascensor del bloque B estará fuera de servicio entre 8am y 2pm.</p>
+                  <div class="flex gap-2 mt-3">
+                    <button class="btn btn-sm btn-secondary">Editar</button>
+                    <button class="btn btn-sm btn-danger" onclick="this.closest('.card').remove()">Eliminar</button>
+                  </div>
+                </div>
+              </div>
+              <div class="card mb-3">
+                <div class="card-body">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="badge badge-primary news-badge info">Info</span>
+                    <span class="text-xs text-muted">01 Abr 2026</span>
+                  </div>
+                  <h4 class="font-semibold">Asamblea General Ordinaria — 20 Abr</h4>
+                  <p class="text-sm text-muted mt-1">Recuerda confirmar tu asistencia. El quórum es obligatorio.</p>
+                  <div class="flex gap-2 mt-3">
+                    <button class="btn btn-sm btn-secondary">Editar</button>
+                    <button class="btn btn-sm btn-danger" onclick="this.closest('.card').remove()">Eliminar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ VOTACIONES ══ -->
+      <section class="page-section" id="admin-votaciones">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="section-title">Votaciones y Encuestas</h1>
+            <p class="section-subtitle">Gestiona decisiones comunitarias</p>
+          </div>
+          <button class="btn btn-primary" data-modal-open="modal-new-vote">Nueva votación</button>
+        </div>
+
+        <div class="grid grid-2 gap-4 mb-6">
+          <div class="card">
+            <div class="card-header">
+              <span class="font-semibold">Resultados: Empresa de Vigilancia</span>
+              <span class="badge badge-neutral">Cerrada</span>
+            </div>
+            <div class="card-body">
+              <div class="chart-box"><canvas id="chart-votes"></canvas></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="font-semibold">Histórico de Participación</span>
+            </div>
+            <div class="card-body">
+              <div class="chart-box"><canvas id="chart-participacion"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="font-semibold">Votaciones activas</span>
+            <span class="badge badge-success">1 activa</span>
+          </div>
+          <div class="card-body">
+            <div class="vote-card mb-4">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="font-semibold">¿Aprueba agregar cámaras en parqueadero?</h4>
+                <span class="badge badge-success">Activa</span>
+              </div>
+              <p class="text-sm text-muted mb-4">Cierre: 15 Abr 2026 · 52 de 128 unidades han votado (41%)</p>
+              <div class="progress-bar-container mb-2"><div class="progress-bar" style="width:41%"></div></div>
+              <div class="flex gap-2 mt-4">
+                <button class="btn btn-sm btn-secondary">Ver detalles</button>
+                <button class="btn btn-sm btn-danger">Cerrar votación</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ DOCUMENTOS ══ -->
+      <section class="page-section" id="admin-documentos">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="section-title">Repositorio de Documentos</h1>
+            <p class="section-subtitle">Reglamento, actas y estados de cuenta</p>
+          </div>
+        </div>
+
+        <div class="grid grid-2 gap-6">
+          <div class="card">
+            <div class="card-header"><span class="font-semibold">Subir documento</span></div>
+            <div class="card-body">
+              <div class="upload-zone mb-4">
+                <div class="upload-icon"><i data-feather="upload-cloud" style="width:36px;height:36px;stroke-width:1.5;"></i></div>
+                <p class="font-semibold mb-1">Arrastra un archivo o haz clic</p>
+                <p class="text-xs text-muted">PDF, XLSX, DOCX · Máx. 10MB</p>
+                <input type="file" style="display:none;" />
+              </div>
+              <div class="form-group mb-4">
+                <label class="form-label">Categoría</label>
+                <select class="form-control">
+                  <option>Reglamento</option>
+                  <option>Actas de Asamblea</option>
+                  <option>Estados de Cuenta</option>
+                  <option>Contratos</option>
+                  <option>Presupuestos</option>
+                </select>
+              </div>
+              <button class="btn btn-primary w-full">Subir documento</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="font-semibold">Documentos disponibles</span></div>
+            <div class="card-body p-0">
+              <div class="list-item">
+                <div class="icon-box danger"><i data-feather="file-text"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Reglamento de Propiedad Horizontal</div>
+                  <div class="text-xs text-muted">PDF · 2.4 MB · Mar 2024</div>
+                </div>
+                <button class="btn btn-sm btn-secondary">Descargar</button>
+              </div>
+              <div class="list-item">
+                <div class="icon-box success"><i data-feather="bar-chart"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Estado de Cuenta — Marzo 2026</div>
+                  <div class="text-xs text-muted">XLSX · 180 KB · 01 Abr 2026</div>
+                </div>
+                <button class="btn btn-sm btn-secondary">Descargar</button>
+              </div>
+              <div class="list-item">
+                <div class="icon-box primary"><i data-feather="file"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Acta Asamblea — Feb 2026</div>
+                  <div class="text-xs text-muted">PDF · 560 KB · 25 Feb 2026</div>
+                </div>
+                <button class="btn btn-sm btn-secondary">Descargar</button>
+              </div>
+              <div class="list-item">
+                <div class="icon-box warning"><i data-feather="dollar-sign"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Presupuesto 2026</div>
+                  <div class="text-xs text-muted">PDF · 1.1 MB · Ene 2026</div>
+                </div>
+                <button class="btn btn-sm btn-secondary">Descargar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ RESERVAS ══ -->
+      <section class="page-section" id="admin-reservas">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="section-title">Reservas de Zonas Comunes</h1>
+            <p class="section-subtitle">Disponibilidad y aprobaciones</p>
+          </div>
+        </div>
+
+        <div class="grid grid-2 gap-4">
+          <div class="card">
+            <div class="card-header"><span class="font-semibold">Solicitudes del mes</span></div>
+            <div class="card-body p-0">
+              <div class="list-item">
+                <div class="icon-box warning"><i data-feather="coffee"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Salón Comunal — Apto 108</div>
+                  <div class="text-xs text-muted">Sáb 12 Abr · 4pm – 10pm</div>
+                </div>
+                <div class="flex gap-1">
+                  <button class="btn btn-sm btn-success">Aprobar</button>
+                  <button class="btn btn-sm btn-danger">Rechazar</button>
+                </div>
+              </div>
+              <div class="list-item">
+                <div class="icon-box primary"><i data-feather="droplet"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Piscina — Apto 402</div>
+                  <div class="text-xs text-muted">Dom 13 Abr · 10am – 1pm</div>
+                </div>
+                <div class="flex gap-1">
+                  <button class="btn btn-sm btn-success">Aprobar</button>
+                  <button class="btn btn-sm btn-danger">Rechazar</button>
+                </div>
+              </div>
+              <div class="list-item">
+                <div class="icon-box success"><i data-feather="zap"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Gimnasio — Apto 210</div>
+                  <div class="text-xs text-muted">Lun 14 Abr · 7am – 9am</div>
+                </div>
+                <span class="badge badge-success">Aprobada</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="font-semibold">Estado de zonas</span></div>
+            <div class="card-body">
+              <div class="flex flex-col gap-3">
+                <div class="flex items-center justify-between p-3 rounded-lg" style="background:var(--color-surface-2)">
+                  <div class="flex items-center gap-2"><i data-feather="coffee" style="width:15px;height:15px;color:var(--color-text-muted);"></i><span class="font-semibold text-sm">Salón Comunal</span></div>
+                  <span class="badge badge-success">Disponible</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-lg" style="background:var(--color-surface-2)">
+                  <div class="flex items-center gap-2"><i data-feather="droplet" style="width:15px;height:15px;color:var(--color-text-muted);"></i><span class="font-semibold text-sm">Piscina</span></div>
+                  <span class="badge badge-warning">Reservada</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-lg" style="background:var(--color-surface-2)">
+                  <div class="flex items-center gap-2"><i data-feather="zap" style="width:15px;height:15px;color:var(--color-text-muted);"></i><span class="font-semibold text-sm">Gimnasio</span></div>
+                  <span class="badge badge-success">Disponible</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-lg" style="background:var(--color-surface-2)">
+                  <div class="flex items-center gap-2"><i data-feather="wind" style="width:15px;height:15px;color:var(--color-text-muted);"></i><span class="font-semibold text-sm">Zona BBQ</span></div>
+                  <span class="badge badge-success">Disponible</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ CONFIG ══ -->
+      <section class="page-section" id="admin-config">
+        <div class="mb-6">
+          <h1 class="section-title">Configuración</h1>
+          <p class="section-subtitle">Parámetros del sistema y del conjunto</p>
+        </div>
+
+        <div class="grid grid-2 gap-6">
+          <div class="card">
+            <div class="card-header"><span class="font-semibold">Información del Conjunto</span></div>
+            <div class="card-body">
+              <div class="form-group mb-4">
+                <label class="form-label">Nombre del conjunto</label>
+                <input type="text" class="form-control" value="Conjunto Residencial El Pinar" />
+              </div>
+              <div class="form-group mb-4">
+                <label class="form-label">NIT Administración</label>
+                <input type="text" class="form-control" value="900.123.456-7" />
+              </div>
+              <div class="form-group mb-4">
+                <label class="form-label">Cuota de administración</label>
+                <input type="text" class="form-control" value="$280,000" />
+              </div>
+              <div class="form-group mb-4">
+                <label class="form-label">Fecha de corte (día del mes)</label>
+                <input type="number" class="form-control" value="5" min="1" max="28" />
+              </div>
+              <button class="btn btn-primary">Guardar cambios</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="font-semibold">Notificaciones automáticas</span></div>
+            <div class="card-body">
+              <div class="flex flex-col gap-5">
+                <div class="flex items-center justify-between">
+                  <div><div class="font-semibold text-sm">Recordatorio de pago</div><div class="text-xs text-muted">Enviar antes de fecha de corte</div></div>
+                  <label class="theme-toggle" style="width:40px;height:22px;">
+                    <input type="checkbox" checked style="display:none;" />
+                    <div class="theme-toggle-track" style="background:var(--color-success);width:40px;height:22px;" onclick="">
+                      <div class="theme-toggle-thumb" style="width:18px;height:18px;transform:translateX(18px);font-size:0;"></div>
+                    </div>
+                  </label>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div><div class="font-semibold text-sm">Alertas de mora</div><div class="text-xs text-muted">Notificar automáticamente al día 5</div></div>
+                  <label class="theme-toggle" style="width:40px;height:22px;">
+                    <input type="checkbox" checked style="display:none;" />
+                    <div class="theme-toggle-track" style="background:var(--color-success);width:40px;height:22px;" onclick="">
+                      <div class="theme-toggle-thumb" style="width:18px;height:18px;transform:translateX(18px);font-size:0;"></div>
+                    </div>
+                  </label>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div><div class="font-semibold text-sm">Nuevos comunicados</div><div class="text-xs text-muted">Notificar vía email a residentes</div></div>
+                  <label class="theme-toggle" style="width:40px;height:22px;">
+                    <input type="checkbox" style="display:none;" />
+                    <div class="theme-toggle-track" style="width:40px;height:22px;" onclick="">
+                      <div class="theme-toggle-thumb" style="width:18px;height:18px;font-size:0;"></div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-quick-action">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Acción rápida</h3>
+      <button class="btn btn-ghost btn-icon" data-modal-close="modal-quick-action" style="display:flex;align-items:center;justify-content:center;">
+        <i data-feather="x" style="width:18px;height:18px;"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="grid grid-2 gap-3">
+        <button class="btn btn-xl btn-secondary" onclick="closeModal('modal-quick-action')"><i data-feather="bell" style="width:20px;height:20px;"></i><span>Nuevo comunicado</span></button>
+        <button class="btn btn-xl btn-secondary" onclick="closeModal('modal-quick-action')"><i data-feather="check-square" style="width:20px;height:20px;"></i><span>Nueva votación</span></button>
+        <button class="btn btn-xl btn-secondary" onclick="closeModal('modal-quick-action')"><i data-feather="user-plus" style="width:20px;height:20px;"></i><span>Nuevo residente</span></button>
+        <button class="btn btn-xl btn-secondary" onclick="closeModal('modal-quick-action')"><i data-feather="upload" style="width:20px;height:20px;"></i><span>Subir documento</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-new-vote">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Nueva votación</h3>
+      <button class="btn btn-ghost btn-icon" data-modal-close="modal-new-vote" style="display:flex;align-items:center;justify-content:center;">
+        <i data-feather="x" style="width:18px;height:18px;"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="vote-create-form">
+        <div class="form-group mb-4">
+          <label class="form-label">Pregunta</label>
+          <input type="text" class="form-control" placeholder="Ej: ¿Aprueba instalar cámaras en el parqueadero?" required />
+        </div>
+        <div class="form-group mb-4">
+          <label class="form-label">Tipo de votación</label>
+          <select class="form-control">
+            <option>Sí / No</option>
+            <option>Múltiple opción</option>
+            <option>Calificación 1-5</option>
+          </select>
+        </div>
+        <div class="form-group mb-4">
+          <label class="form-label">Fecha de cierre</label>
+          <input type="date" class="form-control" required />
+        </div>
+        <div class="modal-footer" style="padding:0;border:none;">
+          <button type="button" class="btn btn-secondary" data-modal-close="modal-new-vote">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Publicar votación</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-new-resident">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Nuevo residente</h3>
+      <button class="btn btn-ghost btn-icon" data-modal-close="modal-new-resident" style="display:flex;align-items:center;justify-content:center;">
+        <i data-feather="x" style="width:18px;height:18px;"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group mb-4">
+        <label class="form-label">Nombre completo</label>
+        <input type="text" class="form-control" placeholder="Nombre y apellidos" />
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label">Número de apartamento</label>
+        <input type="text" class="form-control" placeholder="Ej: 502" />
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label">Tipo</label>
+        <select class="form-control"><option>Propietario</option><option>Arrendatario</option></select>
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label">Correo electrónico</label>
+        <input type="email" class="form-control" placeholder="correo@ejemplo.com" />
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label">Teléfono</label>
+        <input type="tel" class="form-control" placeholder="300 000 0000" />
+      </div>
+      <div class="modal-footer" style="padding:0;border:none;">
+        <button class="btn btn-secondary" data-modal-close="modal-new-resident">Cancelar</button>
+        <button class="btn btn-primary" onclick="showToast('Residente añadido','El residente fue registrado exitosamente.','success');closeModal('modal-new-resident')">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script src="js/theme.js"></script>
+<script src="js/admin.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    feather.replace({ 'stroke-width': 1.8 });
+  });
+</script>
+</body>
+</html>

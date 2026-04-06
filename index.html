@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iniciar Sesión — CondominiumOS</title>
+  <meta name="description" content="Plataforma integral para la gestión de conjuntos residenciales." />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+  <style>
+    .login-page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 768px) {
+      .login-page { grid-template-columns: 1fr; }
+      .login-hero  { display: none; }
+    }
+
+    /* ── Hero panel ── */
+    .login-hero {
+      background: var(--gradient-hero);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .login-hero::before {
+      content: '';
+      position: absolute;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.03);
+      top: -150px; right: -150px;
+    }
+    .login-hero::after {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+      bottom: -80px; left: -80px;
+    }
+    .hero-logo {
+      display: flex; align-items: center; gap: 0.875rem;
+      margin-bottom: 3rem;
+    }
+    .hero-logo-icon {
+      width: 48px; height: 48px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff;
+    }
+    .hero-logo-text strong { color: #fff; font-size: 1.1rem; font-weight: 800; display: block; letter-spacing: -0.01em; }
+    .hero-logo-text span   { color: rgba(255,255,255,0.5); font-size: 0.78rem; }
+    .hero-heading {
+      font-size: 2.25rem; font-weight: 900; color: #fff; line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    .hero-heading span { color: #93c5fd; }
+    .hero-desc { color: rgba(255,255,255,0.65); font-size: 0.95rem; line-height: 1.7; max-width: 400px; margin-bottom: 2.5rem; }
+    .hero-features { display: flex; flex-direction: column; gap: 0.875rem; }
+    .hero-feature {
+      display: flex; align-items: center; gap: 0.75rem;
+      color: rgba(255,255,255,0.8); font-size: 0.875rem;
+    }
+    .hero-feature-icon {
+      width: 30px; height: 30px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      color: rgba(255,255,255,0.9);
+    }
+    .hero-feature-icon svg { width: 15px; height: 15px; stroke-width: 2; }
+
+    /* ── Form panel ── */
+    .login-form-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 3rem 2rem;
+      background: var(--color-bg);
+      overflow-y: auto;
+      position: relative;
+    }
+    .login-box { width: 100%; max-width: 400px; }
+
+    .login-title { font-size: 1.625rem; font-weight: 900; margin-bottom: 0.375rem; letter-spacing: -0.02em; }
+    .login-subtitle { color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 1.75rem; }
+
+    /* Role selector */
+    .role-selector { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.625rem; margin-bottom: 1.75rem; }
+    .role-card {
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: 1rem 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      background: var(--color-surface);
+    }
+    .role-card:hover { border-color: var(--color-primary); background: var(--color-surface-2); }
+    .role-card.selected {
+      border-color: var(--color-primary);
+      background: var(--color-surface);
+      box-shadow: 0 0 0 3px var(--color-primary-light);
+    }
+    .role-card .role-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 0.5rem;
+      color: var(--color-text-muted);
+      transition: all var(--transition-fast);
+    }
+    .role-card .role-icon svg { width: 16px; height: 16px; stroke-width: 1.8; }
+    .role-card.selected .role-icon { background: var(--color-primary-light); border-color: var(--color-primary); color: var(--color-primary); }
+    .role-card .role-name { font-size: 0.7rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .role-card.selected .role-name { color: var(--color-primary); }
+
+    /* Demo note */
+    .demo-note {
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3) var(--space-4);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-2);
+      color: var(--color-text-muted);
+    }
+    .demo-note svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; stroke-width: 2; color: var(--color-primary); }
+    .demo-note small { font-size: 0.78rem; line-height: 1.5; }
+
+    .login-footer-link { text-align: center; font-size: 0.82rem; color: var(--color-text-muted); margin-top: 1.25rem; }
+    .login-footer-link a { color: var(--color-primary); font-weight: 600; cursor: pointer; }
+
+    /* Theme toggle */
+    .login-theme-wrap {
+      position: absolute; top: 1.25rem; right: 1.25rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.75rem; color: var(--color-text-muted);
+    }
+    .login-theme-wrap svg { width: 14px; height: 14px; }
+
+    /* Pwd toggle */
+    .pwd-toggle-btn {
+      position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--color-text-subtle); display: flex; align-items: center;
+    }
+    .pwd-toggle-btn svg { width: 16px; height: 16px; stroke-width: 1.8; }
+  </style>
+</head>
+<body>
+
+<div class="login-page">
+
+  <!-- ── HERO ── -->
+  <div class="login-hero">
+    <div class="hero-logo">
+      <div class="hero-logo-icon">
+        <i data-feather="grid"></i>
+      </div>
+      <div class="hero-logo-text">
+        <strong>CondominiumOS</strong>
+        <span>Gestión Integral</span>
+      </div>
+    </div>
+    <h1 class="hero-heading">Gestiona tu<br><span>conjunto residencial</span><br>con facilidad</h1>
+    <p class="hero-desc">Plataforma todo-en-uno para administradores, residentes y personal de seguridad. Cuotas, visitas, comunicados y más en un solo lugar.</p>
+    <div class="hero-features">
+      <div class="hero-feature">
+        <div class="hero-feature-icon"><i data-feather="dollar-sign"></i></div>
+        Control financiero en tiempo real
+      </div>
+      <div class="hero-feature">
+        <div class="hero-feature-icon"><i data-feather="shield"></i></div>
+        Gestión de accesos y visitas
+      </div>
+      <div class="hero-feature">
+        <div class="hero-feature-icon"><i data-feather="bell"></i></div>
+        Comunicados y votaciones digitales
+      </div>
+      <div class="hero-feature">
+        <div class="hero-feature-icon"><i data-feather="package"></i></div>
+        Seguimiento de correspondencia
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FORM PANEL ── -->
+  <div class="login-form-panel">
+    <!-- Theme toggle -->
+    <div class="login-theme-wrap">
+      <i data-feather="sun"></i>
+      <label class="theme-toggle" for="theme-cb-login">
+        <input type="checkbox" id="theme-cb-login" class="theme-checkbox" />
+        <div class="theme-toggle-track">
+          <div class="theme-toggle-thumb" style="font-size:0;"></div>
+        </div>
+      </label>
+      <i data-feather="moon"></i>
+    </div>
+
+    <div class="login-box">
+      <h2 class="login-title">Bienvenido</h2>
+      <p class="login-subtitle">Selecciona tu rol e inicia sesión</p>
+
+      <!-- Role selector -->
+      <div class="role-selector" id="role-selector">
+        <div class="role-card selected" data-role="resident">
+          <div class="role-icon"><i data-feather="home"></i></div>
+          <span class="role-name">Residente</span>
+        </div>
+        <div class="role-card" data-role="admin">
+          <div class="role-icon"><i data-feather="briefcase"></i></div>
+          <span class="role-name">Administrador</span>
+        </div>
+        <div class="role-card" data-role="guard">
+          <div class="role-icon"><i data-feather="shield"></i></div>
+          <span class="role-name">Guarda</span>
+        </div>
+      </div>
+
+      <!-- Login form -->
+      <form id="login-form">
+        <div class="form-group mb-4">
+          <label class="form-label" for="email">Correo electrónico</label>
+          <div class="form-control-icon">
+            <span class="icon" style="display:flex;align-items:center;color:var(--color-text-subtle);">
+              <i data-feather="mail" style="width:16px;height:16px;stroke-width:1.8;"></i>
+            </span>
+            <input id="email" type="email" class="form-control" placeholder="tucorreo@ejemplo.com" required autocomplete="username" />
+          </div>
+        </div>
+
+        <div class="form-group mb-4">
+          <label class="form-label" for="password">Contraseña</label>
+          <div class="form-control-icon" style="position:relative;">
+            <span class="icon" style="display:flex;align-items:center;color:var(--color-text-subtle);">
+              <i data-feather="lock" style="width:16px;height:16px;stroke-width:1.8;"></i>
+            </span>
+            <input id="password" type="password" class="form-control" placeholder="••••••••" required autocomplete="current-password" style="padding-right:3rem;" />
+            <button type="button" id="toggle-pwd" class="pwd-toggle-btn">
+              <i data-feather="eye" id="pwd-icon"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mb-5">
+          <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;cursor:pointer;color:var(--color-text-muted);">
+            <input type="checkbox" style="accent-color:var(--color-primary);" /> Recordarme
+          </label>
+          <a id="forgot-link" href="#" style="font-size:0.82rem;color:var(--color-primary);font-weight:600;">Olvidé mi contraseña</a>
+        </div>
+
+        <!-- Demo note -->
+        <div class="demo-note">
+          <i data-feather="info"></i>
+          <small><strong>Proyecto universitario — Modo demostración.</strong><br>
+          Puedes ingresar cualquier correo y contraseña para acceder.</small>
+        </div>
+
+        <button id="login-btn" type="submit" class="btn btn-primary w-full btn-lg">
+          Ingresar como <span id="role-label">Residente</span>
+        </button>
+      </form>
+
+      <div class="login-footer-link">
+        Problemas de acceso: <a href="mailto:soporte@condominiumos.co">contacta soporte</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Forgot password modal -->
+<div class="modal-overlay" id="modal-forgot">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Restablecer contraseña</h3>
+      <button class="btn btn-ghost btn-icon" data-modal-close="modal-forgot" style="display:flex;align-items:center;justify-content:center;">
+        <i data-feather="x" style="width:18px;height:18px;"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="text-sm text-muted mb-4">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+      <form id="forgot-form">
+        <div class="form-group mb-4">
+          <label class="form-label" for="forgot-email">Correo electrónico</label>
+          <input id="forgot-email" type="email" class="form-control" placeholder="tucorreo@ejemplo.com" required />
+        </div>
+        <button type="submit" class="btn btn-primary w-full">Enviar enlace</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script src="js/theme.js"></script>
+<script>
+  // Override password toggle for feather icons
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('toggle-pwd');
+    const pwdInput  = document.getElementById('password');
+    if (toggleBtn && pwdInput) {
+      toggleBtn.addEventListener('click', () => {
+        if (pwdInput.type === 'password') {
+          pwdInput.type = 'text';
+          toggleBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+        } else {
+          pwdInput.type = 'password';
+          toggleBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+        }
+      });
+    }
+  });
+</script>
+<script src="js/login.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    feather.replace({ 'stroke-width': 1.8 });
+  });
+</script>
+</body>
+</html>

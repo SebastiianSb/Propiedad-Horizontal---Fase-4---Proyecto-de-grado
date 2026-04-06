@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portería — CondominiumOS</title>
+  <meta name="description" content="Panel de portería: registro de visitas, correspondencia, bitácora y rondas de seguridad." />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+  <style>
+    .live-clock {
+      font-size: var(--font-size-2xl);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .live-date {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+
+    #notif-sent-banner {
+      display: none;
+      align-items: center;
+      gap: var(--space-3);
+      background: var(--color-success-bg);
+      border: 1px solid var(--color-success-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-4) var(--space-5);
+      color: var(--color-success);
+      font-weight: 600;
+      font-size: var(--font-size-sm);
+      margin-bottom: var(--space-4);
+      animation: fadeIn var(--transition-normal);
+    }
+
+    /* Tablet nav icon variant */
+    .tn-icon-wrap {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.05);
+      color: var(--sidebar-text);
+      margin-bottom: 2px;
+      transition: all var(--transition-fast);
+    }
+    .tn-icon-wrap svg { width: 18px; height: 18px; stroke-width: 1.7; }
+    .tablet-nav-item:hover .tn-icon-wrap   { background: rgba(255,255,255,0.1); color: #fff; }
+    .tablet-nav-item.active .tn-icon-wrap  { background: rgba(255,255,255,0.15); color: var(--sidebar-active); }
+
+    /* icon-box used in list items */
+    .icon-box {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      flex-shrink: 0;
+      color: var(--color-text-muted);
+    }
+    .icon-box svg { width: 15px; height: 15px; stroke-width: 1.7; }
+    .icon-box.warning { color: var(--color-warning); }
+    .icon-box.success { color: var(--color-success); }
+    .icon-box.primary { color: var(--color-primary); }
+    .icon-box.danger  { color: var(--color-danger); }
+
+    /* ── Responsive overrides ── */
+    @media (max-width: 640px) {
+      /* Compact icon wrap in bottom nav */
+      .tn-icon-wrap {
+        width: 32px; height: 32px;
+        margin-bottom: 0;
+      }
+      .tn-icon-wrap svg { width: 16px; height: 16px; }
+      .tn-label { font-size: 9px; }
+
+      /* Hide secondary info in header on phones */
+      .tablet-header .live-clock { font-size: 1rem; }
+      .tablet-header .live-date  { display: none; }
+      .tablet-header .avatar-lg  { width: 36px; height: 36px; font-size: 0.9rem; }
+
+      /* Stack guard grid-2 sections */
+      .guard-grid { grid-template-columns: 1fr !important; }
+
+      /* Charts height reduced on phones */
+      .chart-box { height: 200px !important; }
+
+      /* Notif btn compact */
+      .tablet-header .notif-btn { width: 34px; height: 34px; font-size: 0; }
+
+      /* Guard header secondary text hidden */
+      .tablet-header > div > div:last-child { display: none; }
+    }
+
+    @media (max-width: 380px) {
+      .tn-label { display: none; }
+      .tn-icon-wrap { width: 36px; height: 36px; }
+      .tablet-nav-item { min-width: 44px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<div class="app-shell">
+
+  <!-- ════ SIDEBAR ════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon" style="font-size:0;">
+          <i data-feather="grid" style="width:20px;height:20px;stroke:#fff;stroke-width:2;"></i>
+        </div>
+        <div class="sidebar-logo-text">
+          <strong>CondominiumOS</strong>
+          <span>Portería</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Principal</span>
+
+      <div class="nav-item active" data-nav="guard-dashboard">
+        <div class="nav-item-icon-feather"><i data-feather="bar-chart-2"></i></div>
+        <span>Panel</span>
+      </div>
+      <div class="nav-item" data-nav="guard-visitas">
+        <div class="nav-item-icon-feather"><i data-feather="user-check"></i></div>
+        <span>Visitas</span>
+      </div>
+      <div class="nav-item" data-nav="guard-correspondencia">
+        <div class="nav-item-icon-feather"><i data-feather="package"></i></div>
+        <span>Paquetes</span>
+      </div>
+      <div class="nav-item" data-nav="guard-bitacora">
+        <div class="nav-item-icon-feather"><i data-feather="book-open"></i></div>
+        <span>Bitácora</span>
+      </div>
+      <div class="nav-item" data-nav="guard-rondas">
+        <div class="nav-item-icon-feather"><i data-feather="compass"></i></div>
+        <span>Rondas</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" onclick="window.location.href='index.html'">
+        <div class="avatar">CM</div>
+        <div class="sidebar-user-info">
+          <strong>Carlos Martínez</strong>
+          <span>Guarda de turno</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ════ MAIN CONTENT ════ -->
+  <div class="main-content">
+
+    <!-- Header -->
+    <header class="top-header">
+      <div class="top-header-left">
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Abrir menú">
+          <i data-feather="menu" style="width:18px;height:18px;"></i>
+        </button>
+        <div>
+          <div class="header-title" id="page-title">Dashboard de Portería</div>
+          <div class="header-subtitle">Conjunto Residencial El Pinar</div>
+        </div>
+      </div>
+      <div class="top-header-right">
+        <div style="text-align:right;" class="desktop-only text-right">
+          <div class="live-clock" id="live-clock">00:00:00</div>
+          <div class="live-date" id="live-date">—</div>
+        </div>
+        <label class="theme-toggle" for="theme-cb-guard">
+          <input type="checkbox" id="theme-cb-guard" class="theme-checkbox" />
+          <div class="theme-toggle-track"><div class="theme-toggle-thumb" style="font-size:0;"></div></div>
+        </label>
+        <button class="notif-btn" style="font-size:0;">
+          <i data-feather="bell" style="width:18px;height:18px;stroke-width:1.8;"></i>
+          <span class="badge">1</span>
+        </button>
+        <div class="avatar avatar-lg">CM</div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="page-content">
+
+      <!-- ══ DASHBOARD ══ -->
+      <section class="page-section active" id="guard-dashboard">
+        <div class="grid grid-4 gap-4 mb-6">
+          <div class="stat-card primary">
+            <div class="stat-icon primary"><i data-feather="user-check"></i></div>
+            <div class="stat-value">7</div>
+            <div class="stat-label">Visitas activas</div>
+          </div>
+          <div class="stat-card warning">
+            <div class="stat-icon warning"><i data-feather="package"></i></div>
+            <div class="stat-value">3</div>
+            <div class="stat-label">Paquetes en espera</div>
+          </div>
+          <div class="stat-card success">
+            <div class="stat-icon success"><i data-feather="log-in"></i></div>
+            <div class="stat-value">24</div>
+            <div class="stat-label">Ingresos hoy</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i data-feather="compass"></i></div>
+            <div class="stat-value">3/5</div>
+            <div class="stat-label">Ronda en curso</div>
+          </div>
+        </div>
+
+        <div class="grid grid-2 guard-grid gap-4">
+          <!-- Last visits -->
+          <div class="card">
+            <div class="card-header">
+              <span class="font-semibold">Últimos ingresos</span>
+              <span class="badge badge-success" style="display:flex;align-items:center;gap:4px;">
+                <span class="badge-dot success" style="display:inline-block;"></span> En vivo
+              </span>
+            </div>
+            <div class="card-body p-0">
+              <table class="data-table">
+                <thead>
+                  <tr><th>Hora</th><th>Visitante</th><th>Apto</th><th>Estado</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="text-muted">10:32</td>
+                    <td><strong>Ana Morales</strong></td>
+                    <td>302</td>
+                    <td><span class="badge badge-success">Activa</span></td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">09:58</td>
+                    <td><strong>Delivery Rappi</strong></td>
+                    <td>501</td>
+                    <td><span class="badge badge-neutral">Salida</span></td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">09:15</td>
+                    <td><strong>Pedro Lozano</strong></td>
+                    <td>110</td>
+                    <td><span class="badge badge-success">Activa</span></td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted">08:44</td>
+                    <td><strong>Técnico EPM</strong></td>
+                    <td>—</td>
+                    <td><span class="badge badge-neutral">Salida</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card-footer">
+              <button class="btn btn-sm btn-secondary w-full" onclick="document.querySelector('[data-nav=guard-visitas]').click()">Ver registro completo</button>
+            </div>
+          </div>
+
+          <!-- Packages -->
+          <div class="card">
+            <div class="card-header">
+              <span class="font-semibold">Paquetes en portería</span>
+              <span class="badge badge-warning">3 pendientes</span>
+            </div>
+            <div class="card-body p-0" id="packages-list">
+              <div class="list-item">
+                <div class="icon-box warning"><i data-feather="package"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Amazon — Caja pequeña</div>
+                  <div class="text-xs text-muted">Apto 302 · Hoy 09:20</div>
+                </div>
+                <span class="badge badge-warning">Pendiente</span>
+              </div>
+              <div class="list-item">
+                <div class="icon-box warning"><i data-feather="package"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Mercado Libre — Sobre</div>
+                  <div class="text-xs text-muted">Apto 108 · Ayer 15:45</div>
+                </div>
+                <span class="badge badge-warning">Pendiente</span>
+              </div>
+              <div class="list-item">
+                <div class="icon-box warning"><i data-feather="package"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Shein — Bolsa mediana</div>
+                  <div class="text-xs text-muted">Apto 507 · Ayer 11:10</div>
+                </div>
+                <span class="badge badge-warning">Pendiente</span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button class="btn btn-sm btn-secondary w-full" onclick="document.querySelector('[data-nav=guard-correspondencia]').click()">Ver todos los paquetes</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ VISITAS ══ -->
+      <section class="page-section" id="guard-visitas">
+        <div class="grid grid-2 gap-6">
+          <!-- Register form -->
+          <div class="card">
+            <div class="card-header"><span class="font-semibold">Registrar ingreso</span></div>
+            <div class="card-body">
+              <form id="visit-form">
+                <div class="form-group mb-4">
+                  <label class="form-label">Nombre del visitante</label>
+                  <input id="visit-name" type="text" class="form-control" placeholder="Nombre completo" required />
+                </div>
+                <div class="form-group mb-4">
+                  <label class="form-label">Número de documento</label>
+                  <input type="text" class="form-control" placeholder="C.C. o Pasaporte" />
+                </div>
+                <div class="form-group mb-4">
+                  <label class="form-label">Apartamento a visitar</label>
+                  <input id="visit-apt" type="text" class="form-control" placeholder="Ej: 302" required />
+                </div>
+                <div class="form-group mb-4">
+                  <label class="form-label">Tipo de visita</label>
+                  <select id="visit-type" class="form-control">
+                    <option value="Personal">Personal</option>
+                    <option value="Domicilio">Domicilio</option>
+                    <option value="Técnico">Técnico / Proveedor</option>
+                    <option value="Inmobiliaria">Inmobiliaria</option>
+                    <option value="Autoridad">Autoridad</option>
+                  </select>
+                </div>
+                <div class="form-group mb-4">
+                  <label class="form-label">Placa vehículo (opcional)</label>
+                  <input type="text" class="form-control" placeholder="Ej: ABC-123" />
+                </div>
+                <button type="submit" class="btn btn-primary w-full btn-lg">Registrar ingreso</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Visit log -->
+          <div class="card">
+            <div class="card-header">
+              <span class="font-semibold">Registro del día</span>
+              <span class="badge badge-neutral">4 visitas</span>
+            </div>
+            <div class="table-container" style="border:none;border-radius:0;max-height:490px;overflow-y:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr><th>Hora</th><th>Visitante</th><th>Apto</th><th>Tipo</th><th>Estado</th><th>Acción</th></tr>
+                </thead>
+                <tbody id="visit-log-body">
+                  <tr>
+                    <td>10:32</td><td><strong>Ana Morales</strong></td><td>302</td>
+                    <td><span class="badge badge-primary">Personal</span></td>
+                    <td><span class="badge badge-success">Activa</span></td>
+                    <td><button class="btn btn-sm btn-danger" onclick="logExit(this)">Registrar salida</button></td>
+                  </tr>
+                  <tr>
+                    <td>09:58</td><td><strong>Delivery Rappi</strong></td><td>501</td>
+                    <td><span class="badge badge-warning">Domicilio</span></td>
+                    <td><span class="badge badge-neutral">Salida</span></td>
+                    <td>—</td>
+                  </tr>
+                  <tr>
+                    <td>09:15</td><td><strong>Pedro Lozano</strong></td><td>110</td>
+                    <td><span class="badge badge-primary">Personal</span></td>
+                    <td><span class="badge badge-success">Activa</span></td>
+                    <td><button class="btn btn-sm btn-danger" onclick="logExit(this)">Registrar salida</button></td>
+                  </tr>
+                  <tr>
+                    <td>08:44</td><td><strong>Técnico EPM</strong></td><td>—</td>
+                    <td><span class="badge badge-neutral">Técnico</span></td>
+                    <td><span class="badge badge-neutral">Salida</span></td>
+                    <td>—</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ CORRESPONDENCIA ══ -->
+      <section class="page-section" id="guard-correspondencia">
+        <div id="notif-sent-banner">
+          <i data-feather="check-circle" style="width:18px;height:18px;flex-shrink:0;"></i>
+          Notificación enviada al residente exitosamente.
+        </div>
+
+        <div class="grid grid-2 gap-6">
+          <div class="card">
+            <div class="card-header"><span class="font-semibold">Registrar paquete recibido</span></div>
+            <div class="card-body">
+              <form id="package-form">
+                <div class="form-group mb-4">
+                  <label class="form-label">Apartamento destinatario</label>
+                  <input id="pkg-resident" type="text" class="form-control" placeholder="Ej: 302" required />
+                </div>
+                <div class="form-group mb-4">
+                  <label class="form-label">Remitente / empresa</label>
+                  <input type="text" class="form-control" placeholder="Amazon, Mercado Libre, etc." />
+                </div>
+                <div class="form-group mb-4">
+                  <label class="form-label">Descripción del paquete</label>
+                  <input id="pkg-desc" type="text" class="form-control" placeholder="Ej: Caja pequeña — Amazon" required />
+                </div>
+                <div class="form-group mb-4">
+                  <label class="form-label">Tamaño</label>
+                  <select class="form-control">
+                    <option>Sobre / documento</option>
+                    <option>Paquete pequeño</option>
+                    <option>Paquete mediano</option>
+                    <option>Paquete grande / caja</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-primary w-full btn-lg">Registrar y notificar residente</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="font-semibold">Paquetes en portería</span>
+              <span class="badge badge-warning">3 pendientes</span>
+            </div>
+            <div class="card-body p-0" id="packages-list-full">
+              <div class="list-item">
+                <div class="icon-box warning"><i data-feather="package"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Amazon — Caja pequeña</div>
+                  <div class="text-xs text-muted">Apto 302 · Hoy 09:20</div>
+                </div>
+                <span class="badge badge-warning">Pendiente</span>
+              </div>
+              <div class="list-item">
+                <div class="icon-box warning"><i data-feather="package"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Mercado Libre — Sobre</div>
+                  <div class="text-xs text-muted">Apto 108 · Ayer 15:45</div>
+                </div>
+                <span class="badge badge-warning">Pendiente</span>
+              </div>
+              <div class="list-item">
+                <div class="icon-box warning"><i data-feather="package"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Shein — Bolsa mediana</div>
+                  <div class="text-xs text-muted">Apto 507 · Ayer 11:10</div>
+                </div>
+                <span class="badge badge-warning">Pendiente</span>
+              </div>
+              <div class="list-item">
+                <div class="icon-box success"><i data-feather="check"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Falabella — Caja grande</div>
+                  <div class="text-xs text-muted">Apto 210 · 04 Abr · Retirado</div>
+                </div>
+                <span class="badge badge-success">Retirado</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ BITÁCORA ══ -->
+      <section class="page-section" id="guard-bitacora">
+        <div class="grid grid-2 gap-6">
+          <div class="card">
+            <div class="card-header"><span class="font-semibold">Nueva novedad</span></div>
+            <div class="card-body">
+              <form id="bitacora-form">
+                <div class="form-group mb-4">
+                  <label class="form-label">Nivel</label>
+                  <select id="novedad-level" class="form-control">
+                    <option value="normal">Normal</option>
+                    <option value="alerta">Alerta</option>
+                    <option value="urgente">Urgente</option>
+                  </select>
+                </div>
+                <div class="form-group mb-4">
+                  <label class="form-label">Descripción de la novedad</label>
+                  <textarea id="novedad-text" class="form-control" rows="5" placeholder="Describe detalladamente la novedad ocurrida..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-full btn-lg">Registrar novedad</button>
+              </form>
+
+              <hr class="divider" />
+              <div class="flex flex-col gap-2">
+                <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:var(--space-1);">Atajos rápidos</div>
+                <button class="btn btn-sm btn-secondary" onclick="document.getElementById('novedad-text').value='Inicio de turno. Sin novedades al momento de ingreso. Conjunto en calma.'">Inicio de turno</button>
+                <button class="btn btn-sm btn-secondary" onclick="document.getElementById('novedad-text').value='Fin de turno. Sin novedades relevantes durante el período. Entrega realizada.'">Fin de turno</button>
+                <button class="btn btn-sm btn-warning" onclick="document.getElementById('novedad-text').value='Alarma de vehículo activa en parqueadero nivel 1. Se verificó sin presencia de personas extrañas. Alarma desactivada.'">Alarma de vehículo</button>
+                <button class="btn btn-sm btn-danger" onclick="document.getElementById('novedad-level').value='urgente';document.getElementById('novedad-text').value='URGENTE: Incidente en zona común. Se notificó a administración y se contactó servicio de emergencias.'">Incidente urgente</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="font-semibold">Bitácora de hoy</span>
+              <span class="badge badge-neutral">Dom 6 Abr 2026</span>
+            </div>
+            <div class="card-body" style="max-height:520px;overflow-y:auto;">
+              <div class="timeline" id="bitacora-timeline">
+                <div class="timeline-item">
+                  <div class="timeline-time">10:15 a.m.</div>
+                  <div class="timeline-content">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="badge badge-primary">Normal</span>
+                      <span class="text-xs text-muted">Guarda: Carlos Martínez</span>
+                    </div>
+                    <p class="text-sm">Técnico de mantenimiento del ascensor ingresó al bloque B. Identificación y orden de trabajo verificadas.</p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-time">08:00 a.m.</div>
+                  <div class="timeline-content">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="badge badge-primary">Normal</span>
+                      <span class="text-xs text-muted">Guarda: Carlos Martínez</span>
+                    </div>
+                    <p class="text-sm">Inicio de turno. Sin novedades al momento de ingreso. Conjunto en calma.</p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-time">Ayer 11:50 p.m.</div>
+                  <div class="timeline-content">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="badge badge-warning">Alerta</span>
+                      <span class="text-xs text-muted">Guarda: Luis Gómez</span>
+                    </div>
+                    <p class="text-sm">Alarma de vehículo activa en parqueadero nivel 1. Verificado sin anomalías. Alarma desactivada.</p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-time">Ayer 07:45 p.m.</div>
+                  <div class="timeline-content">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="badge badge-primary">Normal</span>
+                      <span class="text-xs text-muted">Guarda: Luis Gómez</span>
+                    </div>
+                    <p class="text-sm">Fin de turno de día sin novedades. Entrega de turno nocturno realizada.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ RONDAS ══ -->
+      <section class="page-section" id="guard-rondas">
+        <div class="grid grid-2 gap-6">
+          <div class="card">
+            <div class="card-header">
+              <span class="font-semibold">Ronda de control</span>
+              <span class="badge badge-warning">En progreso</span>
+            </div>
+            <div class="card-body">
+              <div class="mb-5">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-semibold">Progreso de la ronda</span>
+                  <span class="text-sm font-semibold" id="rounds-progress-label">0 / 8 puntos (0%)</span>
+                </div>
+                <div class="progress-bar-container">
+                  <div class="progress-bar" id="rounds-progress-bar" style="width:0%"></div>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <div class="checklist-item">
+                  <div class="check-circle"></div>
+                  <div class="flex-1">
+                    <div class="font-semibold text-sm">Parqueadero nivel 1</div>
+                    <div class="text-xs text-muted">Verificar vehículos y accesos</div>
+                  </div>
+                </div>
+                <div class="checklist-item">
+                  <div class="check-circle"></div>
+                  <div class="flex-1">
+                    <div class="font-semibold text-sm">Parqueadero nivel 2</div>
+                    <div class="text-xs text-muted">Verificar vehículos y accesos</div>
+                  </div>
+                </div>
+                <div class="checklist-item">
+                  <div class="check-circle"></div>
+                  <div class="flex-1">
+                    <div class="font-semibold text-sm">Perímetro bloque A</div>
+                    <div class="text-xs text-muted">Revisión de puertas y ventanas</div>
+                  </div>
+                </div>
+                <div class="checklist-item">
+                  <div class="check-circle"></div>
+                  <div class="flex-1">
+                    <div class="font-semibold text-sm">Perímetro bloque B</div>
+                    <div class="text-xs text-muted">Revisión de puertas y ventanas</div>
+                  </div>
+                </div>
+                <div class="checklist-item">
+                  <div class="check-circle"></div>
+                  <div class="flex-1">
+                    <div class="font-semibold text-sm">Iluminación zonas comunes</div>
+                    <div class="text-xs text-muted">Verificar lámparas encendidas</div>
+                  </div>
+                </div>
+                <div class="checklist-item">
+                  <div class="check-circle"></div>
+                  <div class="flex-1">
+                    <div class="font-semibold text-sm">Zona de piscina</div>
+                    <div class="text-xs text-muted">Asegurar acceso cerrado</div>
+                  </div>
+                </div>
+                <div class="checklist-item">
+                  <div class="check-circle"></div>
+                  <div class="flex-1">
+                    <div class="font-semibold text-sm">Salón comunal</div>
+                    <div class="text-xs text-muted">Puertas aseguradas</div>
+                  </div>
+                </div>
+                <div class="checklist-item">
+                  <div class="check-circle"></div>
+                  <div class="flex-1">
+                    <div class="font-semibold text-sm">Cámaras de seguridad</div>
+                    <div class="text-xs text-muted">Verificar funcionamiento</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button class="btn btn-secondary w-full" onclick="document.querySelectorAll('.checklist-item').forEach(i=>{i.classList.remove('done');const c=i.querySelector('.check-circle');if(c)c.textContent='';});document.getElementById('rounds-progress-bar').style.width='0%';document.getElementById('rounds-progress-label').textContent='0 / 8 puntos (0%)';showToast('Ronda reiniciada','Nueva ronda iniciada.','info');">Iniciar nueva ronda</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="font-semibold">Historial de rondas</span>
+              <span class="badge badge-neutral">Hoy</span>
+            </div>
+            <div class="card-body p-0">
+              <div class="list-item">
+                <div class="icon-box success"><i data-feather="check"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Ronda completada</div>
+                  <div class="text-xs text-muted">8/8 puntos · Hoy 09:00 a.m.</div>
+                </div>
+                <span class="badge badge-success">100%</span>
+              </div>
+              <div class="list-item">
+                <div class="icon-box success"><i data-feather="check"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Ronda completada</div>
+                  <div class="text-xs text-muted">8/8 puntos · Hoy 06:00 a.m.</div>
+                </div>
+                <span class="badge badge-success">100%</span>
+              </div>
+              <div class="list-item">
+                <div class="icon-box warning"><i data-feather="alert-triangle"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Ronda incompleta</div>
+                  <div class="text-xs text-muted">6/8 puntos · Ayer 08:00 p.m.</div>
+                </div>
+                <span class="badge badge-warning">75%</span>
+              </div>
+              <div class="list-item">
+                <div class="icon-box success"><i data-feather="check"></i></div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">Ronda completada</div>
+                  <div class="text-xs text-muted">8/8 puntos · Ayer 05:00 p.m.</div>
+                </div>
+                <span class="badge badge-success">100%</span>
+              </div>
+            </div>
+
+            <div class="card-header" style="border-top:1px solid var(--color-border-subtle);border-bottom:none;">
+              <span class="font-semibold">Información del turno</span>
+            </div>
+            <div class="card-body">
+              <div class="flex flex-col gap-3">
+                <div class="flex items-center justify-between p-3 rounded-lg" style="background:var(--color-surface-2);">
+                  <span class="text-sm font-semibold">Guarda de turno</span>
+                  <span class="text-sm">Carlos Martínez</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-lg" style="background:var(--color-surface-2);">
+                  <span class="text-sm font-semibold">Inicio de turno</span>
+                  <span class="text-sm">08:00 a.m.</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-lg" style="background:var(--color-surface-2);">
+                  <span class="text-sm font-semibold">Fin de turno</span>
+                  <span class="text-sm">04:00 p.m.</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-lg" style="background:var(--color-surface-2);">
+                  <span class="text-sm font-semibold">Línea de emergencias</span>
+                  <span class="text-sm text-danger font-semibold">123 / 112</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script>
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('live-clock').textContent =
+      now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('live-date').textContent =
+      now.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+</script>
+<script src="js/theme.js"></script>
+<script src="js/guard.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    feather.replace({ 'stroke-width': 1.8 });
+  });
+</script>
+</body>
+</html>

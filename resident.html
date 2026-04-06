@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Residente — CondominiumOS</title>
+  <meta name="description" content="Portal del residente: cuotas, comunicados, votaciones, paquetes y reservas." />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+  <style>
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-3);
+    }
+    @media (max-width: 360px) {
+      .quick-actions { grid-template-columns: repeat(2, 1fr); }
+    }
+    .quick-action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-4) var(--space-2);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-xl);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      text-align: center;
+    }
+    .quick-action-btn:hover {
+      border-color: var(--color-primary);
+      background: var(--color-surface-2);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    .quick-action-btn .qa-icon {
+      width: 38px; height: 38px;
+      border-radius: var(--radius-md);
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--color-text-muted);
+    }
+    .quick-action-btn .qa-icon svg { width: 16px; height: 16px; stroke-width: 1.7; }
+    .quick-action-btn:hover .qa-icon { color: var(--color-primary); border-color: var(--color-primary); }
+    .quick-action-btn .qa-label { font-size: 0.68rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    .finance-chart-box { position: relative; height: 220px; }
+
+    .icon-box {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      flex-shrink: 0;
+      color: var(--color-text-muted);
+    }
+    .icon-box svg { width: 15px; height: 15px; stroke-width: 1.7; }
+    .icon-box.success { color: var(--color-success); }
+    .icon-box.warning { color: var(--color-warning); }
+    .icon-box.primary { color: var(--color-primary); }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<div class="app-shell">
+
+  <!-- ════ SIDEBAR (Desktop) ════ -->
+  <aside class="sidebar desktop-only" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon" style="font-size:0;">
+          <i data-feather="grid" style="width:20px;height:20px;stroke:#fff;stroke-width:2;"></i>
+        </div>
+        <div class="sidebar-logo-text">
+          <strong>CondominiumOS</strong>
+          <span>Residente</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Principal</span>
+
+      <div class="nav-item active" data-nav="home">
+        <div class="nav-item-icon-feather"><i data-feather="home"></i></div>
+        <span>Inicio</span>
+      </div>
+      <div class="nav-item" data-nav="finances">
+        <div class="nav-item-icon-feather"><i data-feather="dollar-sign"></i></div>
+        <span>Cuotas</span>
+      </div>
+      <div class="nav-item" data-nav="news">
+        <div class="nav-item-icon-feather"><i data-feather="bell"></i></div>
+        <span>Noticias</span>
+        <span class="nav-item-badge">2</span>
+      </div>
+
+      <span class="nav-section-label">Servicios</span>
+
+      <div class="nav-item" data-nav="voting">
+        <div class="nav-item-icon-feather"><i data-feather="check-square"></i></div>
+        <span>Votaciones</span>
+      </div>
+      <div class="nav-item" data-nav="reservations">
+        <div class="nav-item-icon-feather"><i data-feather="calendar"></i></div>
+        <span>Reservas</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" onclick="window.location.href='index.html'">
+        <div class="avatar">JP</div>
+        <div class="sidebar-user-info">
+          <strong>Juan Pérez</strong>
+          <span>Apto 302</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ════ MAIN CONTENT ════ -->
+  <div class="main-content">
+
+    <!-- HEADER -->
+    <header class="top-header">
+      <div class="top-header-left">
+        <button class="hamburger-btn desktop-only" id="hamburger-btn" aria-label="Abrir menú">
+          <i data-feather="menu" style="width:18px;height:18px;"></i>
+        </button>
+        <div>
+          <div class="header-title" id="page-title">Portal del Residente</div>
+          <div class="header-subtitle hide-on-desktop">Conjunto Residencial El Pinar</div>
+        </div>
+      </div>
+      <div class="top-header-right">
+        <label class="theme-toggle" for="theme-cb-resident-desk">
+          <input type="checkbox" id="theme-cb-resident-desk" class="theme-checkbox" />
+          <div class="theme-toggle-track"><div class="theme-toggle-thumb" style="font-size:0;"></div></div>
+        </label>
+        <button class="notif-btn" style="font-size:0;">
+          <i data-feather="bell" style="width:18px;height:18px;stroke-width:1.8;"></i>
+          <span class="badge">2</span>
+        </button>
+        <div class="avatar">JP</div>
+      </div>
+    </header>
+
+<div class="mobile-shell" style="min-height:auto;">
+
+  <!-- CONTENT -->
+  <div class="mobile-content">
+
+    <div class="mobile-greeting hide-on-desktop mb-4">
+      <strong>¡Buenas, Juan!</strong>
+      <span id="resident-date">Domingo, 6 de Abril 2026</span>
+    </div>
+    <div class="peace-banner hide-on-desktop mb-5">
+      <div class="icon" style="display:flex;"><i data-feather="check-circle" style="width:18px;height:18px;stroke-width:2;"></i></div>
+      <div class="peace-banner-text">
+        <strong>Al día</strong>
+        <span>Cuota Abril 2026 pagada · $280,000</span>
+      </div>
+    </div>
+
+    <!-- HOME -->
+    <section class="page-section active" id="home">
+      <div class="quick-actions mb-5">
+        <button class="quick-action-btn" onclick="document.querySelector('[data-nav=finances]').click()">
+          <div class="qa-icon"><i data-feather="dollar-sign"></i></div>
+          <span class="qa-label">Cuotas</span>
+        </button>
+        <button class="quick-action-btn" onclick="document.querySelector('[data-nav=news]').click()">
+          <div class="qa-icon"><i data-feather="bell"></i></div>
+          <span class="qa-label">Noticias</span>
+        </button>
+        <button class="quick-action-btn" onclick="document.querySelector('[data-nav=reservations]').click()">
+          <div class="qa-icon"><i data-feather="calendar"></i></div>
+          <span class="qa-label">Reservas</span>
+        </button>
+        <button class="quick-action-btn" id="btn-porteria">
+          <div class="qa-icon"><i data-feather="phone"></i></div>
+          <span class="qa-label">Portería</span>
+        </button>
+      </div>
+
+      <div class="section-title text-base mb-3">Paquetes pendientes</div>
+      <div class="card mb-5">
+        <div class="card-body p-0">
+          <div class="list-item">
+            <div class="icon-box warning"><i data-feather="package"></i></div>
+            <div class="flex-1">
+              <div class="font-semibold text-sm">Amazon — Paquete pequeño</div>
+              <div class="text-xs text-muted">Llegó hoy · En portería</div>
+            </div>
+            <button class="btn btn-sm btn-success pkg-confirm-btn">Confirmar</button>
+          </div>
+          <div class="list-item">
+            <div class="icon-box warning"><i data-feather="package"></i></div>
+            <div class="flex-1">
+              <div class="font-semibold text-sm">Mercado Libre — Caja mediana</div>
+              <div class="text-xs text-muted">Ayer · En portería</div>
+            </div>
+            <button class="btn btn-sm btn-success pkg-confirm-btn">Confirmar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title text-base mb-3">Últimas novedades</div>
+      <div class="flex flex-col gap-3">
+        <div class="card card-interactive">
+          <div class="card-body">
+            <div class="flex items-center justify-between mb-2">
+              <span class="badge badge-warning news-badge aviso">Aviso</span>
+              <span class="text-xs text-muted">05 Abr</span>
+            </div>
+            <h4 class="font-semibold text-sm">Mantenimiento ascensor — Jue 10 Abr</h4>
+            <p class="text-xs text-muted mt-1">Fuera de servicio 8am–2pm, bloque B.</p>
+          </div>
+        </div>
+        <div class="card card-interactive">
+          <div class="card-body">
+            <div class="flex items-center justify-between mb-2">
+              <span class="badge badge-primary news-badge info">Info</span>
+              <span class="text-xs text-muted">01 Abr</span>
+            </div>
+            <h4 class="font-semibold text-sm">Asamblea General — Dom 20 Abr</h4>
+            <p class="text-xs text-muted mt-1">Salón comunal, 10am. Confirma tu asistencia.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINANCES -->
+    <section class="page-section" id="finances">
+      <div class="section-title mb-1">Mis Cuotas</div>
+      <p class="section-subtitle mb-4">Apto 302 · Juan Pérez</p>
+
+      <div class="peace-banner mb-4">
+        <div class="icon" style="display:flex;"><i data-feather="check-circle" style="width:18px;height:18px;stroke-width:2;"></i></div>
+        <div class="peace-banner-text">
+          <strong>Estás al día</strong>
+          <span>No tienes saldos pendientes</span>
+        </div>
+      </div>
+
+      <div class="grid grid-2 gap-3 mb-4">
+        <div class="stat-card primary" style="padding:var(--space-4)">
+          <div class="stat-value" style="font-size:var(--font-size-2xl)">$280K</div>
+          <div class="stat-label">Cuota mensual</div>
+        </div>
+        <div class="stat-card success" style="padding:var(--space-4)">
+          <div class="stat-value" style="font-size:var(--font-size-2xl)">$0</div>
+          <div class="stat-label">Saldo en mora</div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header"><span class="font-semibold">Balance del conjunto</span></div>
+        <div class="card-body">
+          <div class="finance-chart-box"><canvas id="finance-chart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="font-semibold">Historial de pagos</span></div>
+        <div class="card-body p-0">
+          <div class="list-item">
+            <div class="icon-box success"><i data-feather="check"></i></div>
+            <div class="flex-1">
+              <div class="font-semibold text-sm">Cuota Abril 2026</div>
+              <div class="text-xs text-muted">02 Abr 2026</div>
+            </div>
+            <span class="font-semibold text-sm">$280,000</span>
+          </div>
+          <div class="list-item">
+            <div class="icon-box success"><i data-feather="check"></i></div>
+            <div class="flex-1">
+              <div class="font-semibold text-sm">Cuota Marzo 2026</div>
+              <div class="text-xs text-muted">03 Mar 2026</div>
+            </div>
+            <span class="font-semibold text-sm">$280,000</span>
+          </div>
+          <div class="list-item">
+            <div class="icon-box success"><i data-feather="check"></i></div>
+            <div class="flex-1">
+              <div class="font-semibold text-sm">Cuota Febrero 2026</div>
+              <div class="text-xs text-muted">01 Feb 2026</div>
+            </div>
+            <span class="font-semibold text-sm">$280,000</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEWS -->
+    <section class="page-section" id="news">
+      <div class="section-title mb-1">Comunicados</div>
+      <p class="section-subtitle mb-4">Noticias del conjunto</p>
+
+      <div class="flex flex-col gap-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="flex items-center justify-between mb-2">
+              <span class="badge badge-danger news-badge alerta">Alerta</span>
+              <span class="text-xs text-muted">05 Abr 2026</span>
+            </div>
+            <h3 class="font-semibold">Mantenimiento ascensor</h3>
+            <p class="text-sm text-muted mt-2">El ascensor del bloque B estará fuera de servicio el jueves 10 de abril de 8am a 2pm por mantenimiento preventivo.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="flex items-center justify-between mb-2">
+              <span class="badge badge-primary news-badge info">Info</span>
+              <span class="text-xs text-muted">01 Abr 2026</span>
+            </div>
+            <h3 class="font-semibold">Asamblea General Ordinaria</h3>
+            <p class="text-sm text-muted mt-2">Domingo 20 de abril a las 10am en el salón comunal. Orden del día: presupuesto 2026-2027, elección de consejo.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="flex items-center justify-between mb-2">
+              <span class="badge badge-warning news-badge aviso">Aviso</span>
+              <span class="text-xs text-muted">25 Mar 2026</span>
+            </div>
+            <h3 class="font-semibold">Corte de agua programado</h3>
+            <p class="text-sm text-muted mt-2">Miércoles 2 de abril entre 9am y 1pm. Se habilitarán tanques de almacenamiento.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="flex items-center justify-between mb-2">
+              <span class="badge badge-neutral news-badge general">General</span>
+              <span class="text-xs text-muted">20 Mar 2026</span>
+            </div>
+            <h3 class="font-semibold">Reglamento de mascotas actualizado</h3>
+            <p class="text-sm text-muted mt-2">Las mascotas deben ir con correa en zonas comunes. Multa por incumplimiento: $50,000.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VOTING -->
+    <section class="page-section" id="voting">
+      <div class="section-title mb-1">Votaciones</div>
+      <p class="section-subtitle mb-4">Participa en las decisiones del conjunto</p>
+
+      <div class="vote-card mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="badge badge-success">Activa</span>
+          <span class="text-xs text-muted">Cierra: 15 Abr 2026</span>
+        </div>
+        <h3 class="font-semibold mb-1">¿Aprueba instalar cámaras adicionales en el parqueadero?</h3>
+        <p class="text-xs text-muted mb-4">52 de 128 unidades han votado</p>
+        <div class="vote-options">
+          <div class="vote-option">
+            <div class="vote-radio"></div>
+            <span>Sí, estoy de acuerdo</span>
+          </div>
+          <div class="vote-option">
+            <div class="vote-radio"></div>
+            <span>No estoy de acuerdo</span>
+          </div>
+          <div class="vote-option">
+            <div class="vote-radio"></div>
+            <span>Me abstengo</span>
+          </div>
+        </div>
+        <button class="btn btn-primary w-full mt-4 vote-submit-btn">Enviar mi voto</button>
+      </div>
+
+      <div class="vote-card voted">
+        <div class="flex items-center justify-between mb-2">
+          <span class="badge badge-neutral">Cerrada</span>
+          <span class="text-xs text-muted">Cerró: 20 Mar 2026</span>
+        </div>
+        <h3 class="font-semibold mb-3">¿Renovamos contrato con empresa de vigilancia?</h3>
+        <div class="flex flex-col gap-2">
+          <div>
+            <div class="flex items-center justify-between text-xs mb-1">
+              <span>Sí, renovar</span><span class="font-semibold">54%</span>
+            </div>
+            <div class="progress-bar-container"><div class="progress-bar success" style="width:54%"></div></div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between text-xs mb-1">
+              <span>No, cambiar</span><span class="font-semibold">38%</span>
+            </div>
+            <div class="progress-bar-container"><div class="progress-bar danger" style="width:38%"></div></div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between text-xs mb-1">
+              <span>Abstención</span><span class="font-semibold">8%</span>
+            </div>
+            <div class="progress-bar-container"><div class="progress-bar" style="width:8%;background:var(--color-text-subtle)"></div></div>
+          </div>
+        </div>
+        <p class="text-xs text-success mt-3">Tu voto: Sí, renovar contrato</p>
+      </div>
+    </section>
+
+    <!-- RESERVATIONS -->
+    <section class="page-section" id="reservations">
+      <div class="section-title mb-1">Reservas</div>
+      <p class="section-subtitle mb-4">Zonas comunes disponibles</p>
+
+      <div class="card mb-4">
+        <div class="card-header"><span class="font-semibold">Nueva reserva</span></div>
+        <div class="card-body">
+          <div class="form-group mb-3">
+            <label class="form-label">Zona</label>
+            <select class="form-control">
+              <option>Salón Comunal</option>
+              <option>Piscina</option>
+              <option>Gimnasio</option>
+              <option>Zona BBQ</option>
+            </select>
+          </div>
+          <div class="form-group mb-3">
+            <label class="form-label">Fecha</label>
+            <input type="date" class="form-control" />
+          </div>
+          <div class="grid grid-2 gap-2 mb-3">
+            <div class="form-group">
+              <label class="form-label">Desde</label>
+              <input type="time" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Hasta</label>
+              <input type="time" class="form-control" />
+            </div>
+          </div>
+          <button class="btn btn-primary w-full" onclick="showToast('Solicitud enviada','Tu reserva está en revisión por la administración.','success')">Solicitar reserva</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="font-semibold">Mis reservas</span></div>
+        <div class="card-body p-0">
+          <div class="list-item">
+            <div class="icon-box success"><i data-feather="zap"></i></div>
+            <div class="flex-1">
+              <div class="font-semibold text-sm">Gimnasio</div>
+              <div class="text-xs text-muted">14 Abr · 7am – 9am</div>
+            </div>
+            <span class="badge badge-success">Aprobada</span>
+          </div>
+          <div class="list-item">
+            <div class="icon-box warning"><i data-feather="coffee"></i></div>
+            <div class="flex-1">
+              <div class="font-semibold text-sm">Salón Comunal</div>
+              <div class="text-xs text-muted">20 Abr · 4pm – 9pm</div>
+            </div>
+            <span class="badge badge-warning">Pendiente</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav hide-on-desktop">
+    <div class="bottom-nav-item active" data-nav="home">
+      <span class="nav-icon" style="font-size:0;display:flex;justify-content:center;">
+        <i data-feather="home" style="width:22px;height:22px;stroke-width:1.8;"></i>
+      </span>
+      <span class="nav-label">Inicio</span>
+    </div>
+    <div class="bottom-nav-item" data-nav="finances">
+      <span class="nav-icon" style="font-size:0;display:flex;justify-content:center;">
+        <i data-feather="dollar-sign" style="width:22px;height:22px;stroke-width:1.8;"></i>
+      </span>
+      <span class="nav-label">Cuotas</span>
+    </div>
+    <div class="bottom-nav-item" data-nav="news">
+      <span class="nav-icon" style="font-size:0;display:flex;justify-content:center;">
+        <i data-feather="bell" style="width:22px;height:22px;stroke-width:1.8;"></i>
+      </span>
+      <span class="nav-label">Noticias</span>
+      <span class="nav-dot"></span>
+    </div>
+    <div class="bottom-nav-item" data-nav="voting">
+      <span class="nav-icon" style="font-size:0;display:flex;justify-content:center;">
+        <i data-feather="check-square" style="width:22px;height:22px;stroke-width:1.8;"></i>
+      </span>
+      <span class="nav-label">Votar</span>
+    </div>
+    <div class="bottom-nav-item" data-nav="reservations">
+      <span class="nav-icon" style="font-size:0;display:flex;justify-content:center;">
+        <i data-feather="calendar" style="width:22px;height:22px;stroke-width:1.8;"></i>
+      </span>
+      <span class="nav-label">Reservas</span>
+    </div>
+  </nav>
+
+</div>
+</div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script>
+  const d = new Date();
+  const opts = { weekday:'long', day:'numeric', month:'long', year:'numeric' };
+  document.getElementById('resident-date').textContent = d.toLocaleDateString('es-CO', opts);
+</script>
+<script src="js/theme.js"></script>
+<script src="js/resident.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    feather.replace({ 'stroke-width': 1.8 });
+  });
+</script>
+</body>
+</html>
