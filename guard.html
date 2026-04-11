@@ -38,7 +38,6 @@
       animation: fadeIn var(--transition-normal);
     }
 
-    /* Tablet nav icon variant */
     .tn-icon-wrap {
       width: 40px; height: 40px;
       border-radius: var(--radius-md);
@@ -52,7 +51,6 @@
     .tablet-nav-item:hover .tn-icon-wrap   { background: rgba(255,255,255,0.1); color: #fff; }
     .tablet-nav-item.active .tn-icon-wrap  { background: rgba(255,255,255,0.15); color: var(--sidebar-active); }
 
-    /* icon-box used in list items */
     .icon-box {
       width: 36px; height: 36px;
       border-radius: var(--radius-md);
@@ -68,9 +66,7 @@
     .icon-box.primary { color: var(--color-primary); }
     .icon-box.danger  { color: var(--color-danger); }
 
-    /* ── Responsive overrides ── */
     @media (max-width: 640px) {
-      /* Compact icon wrap in bottom nav */
       .tn-icon-wrap {
         width: 32px; height: 32px;
         margin-bottom: 0;
@@ -78,21 +74,16 @@
       .tn-icon-wrap svg { width: 16px; height: 16px; }
       .tn-label { font-size: 9px; }
 
-      /* Hide secondary info in header on phones */
       .tablet-header .live-clock { font-size: 1rem; }
       .tablet-header .live-date  { display: none; }
       .tablet-header .avatar-lg  { width: 36px; height: 36px; font-size: 0.9rem; }
 
-      /* Stack guard grid-2 sections */
       .guard-grid { grid-template-columns: 1fr !important; }
 
-      /* Charts height reduced on phones */
       .chart-box { height: 200px !important; }
 
-      /* Notif btn compact */
       .tablet-header .notif-btn { width: 34px; height: 34px; font-size: 0; }
 
-      /* Guard header secondary text hidden */
       .tablet-header > div > div:last-child { display: none; }
     }
 
@@ -105,12 +96,10 @@
 </head>
 <body>
 
-<!-- Sidebar overlay (mobile) -->
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
 <div class="app-shell">
 
-  <!-- ════ SIDEBAR ════ -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
@@ -160,10 +149,8 @@
     </div>
   </aside>
 
-  <!-- ════ MAIN CONTENT ════ -->
   <div class="main-content">
 
-    <!-- Header -->
     <header class="top-header">
       <div class="top-header-left">
         <button class="hamburger-btn" id="hamburger-btn" aria-label="Abrir menú">
@@ -194,10 +181,8 @@
       </div>
     </header>
 
-    <!-- Content -->
     <main class="page-content">
 
-      <!-- ══ DASHBOARD ══ -->
       <section class="page-section active" id="guard-dashboard">
         <div class="grid grid-4 gap-4 mb-6">
           <div class="stat-card primary">
@@ -223,7 +208,6 @@
         </div>
 
         <div class="grid grid-2 guard-grid gap-4">
-          <!-- Last visits -->
           <div class="card">
             <div class="card-header">
               <span class="font-semibold">Últimos ingresos</span>
@@ -269,7 +253,6 @@
             </div>
           </div>
 
-          <!-- Packages -->
           <div class="card">
             <div class="card-header">
               <span class="font-semibold">Paquetes en portería</span>
@@ -308,10 +291,8 @@
         </div>
       </section>
 
-      <!-- ══ VISITAS ══ -->
       <section class="page-section" id="guard-visitas">
         <div class="grid grid-2 gap-6">
-          <!-- Register form -->
           <div class="card">
             <div class="card-header"><span class="font-semibold">Registrar ingreso</span></div>
             <div class="card-body">
@@ -347,7 +328,6 @@
             </div>
           </div>
 
-          <!-- Visit log -->
           <div class="card">
             <div class="card-header">
               <span class="font-semibold">Registro del día</span>
@@ -390,7 +370,6 @@
         </div>
       </section>
 
-      <!-- ══ CORRESPONDENCIA ══ -->
       <section class="page-section" id="guard-correspondencia">
         <div id="notif-sent-banner">
           <i data-feather="check-circle" style="width:18px;height:18px;flex-shrink:0;"></i>
@@ -471,7 +450,6 @@
         </div>
       </section>
 
-      <!-- ══ BITÁCORA ══ -->
       <section class="page-section" id="guard-bitacora">
         <div class="grid grid-2 gap-6">
           <div class="card">
@@ -557,7 +535,6 @@
         </div>
       </section>
 
-      <!-- ══ RONDAS ══ -->
       <section class="page-section" id="guard-rondas">
         <div class="grid grid-2 gap-6">
           <div class="card">
