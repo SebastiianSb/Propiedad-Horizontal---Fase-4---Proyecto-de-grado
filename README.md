@@ -18,5 +18,7 @@ Aplicacion web para la gestion integral de propiedad horizontal (conjuntos resid
 - `css/`: Hojas de estilo para el diseno de la aplicacion.
 - `js/`: Archivos de logica de programacion e interactividad.
 
-## Requisitos de Ejecucion
-No requiere un servidor backend para su visualizacion basica. Puede ser ejecutado abriendo el archivo `index.html` en cualquier navegador web moderno.
+## Creado Por
+- Juan Sebastián Andrade Sanchez
+- Laura Valentina Corona
+- Andres Niño
