@@ -1,9 +1,5 @@
-/* ============================================================
-   ADMIN JS — Dashboard, Charts, Gestión
-   ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
 
-  /* ── Sidebar SPA ── */
   const navItems = document.querySelectorAll('.nav-item[data-nav]');
   const titles = {
     'admin-dashboard':  'Dashboard',
@@ -40,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     dashChartsDone = true;
     const c = getColors();
 
-    // Cartera morosa - Donut
     const ctx1 = document.getElementById('chart-cartera');
     if (ctx1) new Chart(ctx1, {
       type: 'doughnut',
@@ -65,7 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Recaudación mensual - Line
     const ctx2 = document.getElementById('chart-recaudacion');
     if (ctx2) new Chart(ctx2, {
       type: 'line',
@@ -175,10 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Render dashboard charts on initial load
   renderDashboardCharts();
 
-  /* ── Communications form ── */
   document.getElementById('comm-form')?.addEventListener('submit', e => {
     e.preventDefault();
     const title = document.getElementById('comm-title')?.value;
@@ -209,7 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('📢 Comunicado publicado', 'La noticia fue enviada a todos los residentes.', 'success');
   });
 
-  /* ── New vote form ── */
   document.getElementById('vote-create-form')?.addEventListener('submit', e => {
     e.preventDefault();
     showToast('✅ Votación creada', 'La encuesta ya está disponible para los residentes.', 'success');
@@ -217,15 +208,13 @@ document.addEventListener('DOMContentLoaded', () => {
     e.target.reset();
   });
 
-  /* ── User search ── */
   document.getElementById('user-search')?.addEventListener('input', function() {
     const q = this.value.toLowerCase();
     document.querySelectorAll('#users-tbody tr').forEach(row => {
       row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
     });
   });
-
-  /* ── File upload ── */
+   
   document.querySelectorAll('.upload-zone').forEach(zone => {
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--color-primary)'; });
     zone.addEventListener('dragleave', () => { zone.style.borderColor = ''; });
@@ -245,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* ── Theme observer: re-render charts ── */
+
   const observer = new MutationObserver(() => {
     dashChartsDone = false; voteChartsDone = false; finChartsDone = false;
   });
