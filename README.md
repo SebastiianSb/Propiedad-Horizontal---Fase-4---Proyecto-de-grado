@@ -1,6 +1,6 @@
 # Propiedad Horizontal
 
-**Nota Importante:** Este proyecto es un prototipo desarrollado especificamente para la fase 3 del proyecto de grado.
+**Nota Importante:** Este proyecto es un prototipo desarrollado especificamente para la fase 3 y fase 4 del proyecto de grado.
 
 ## Descripcion General
 Aplicacion web para la gestion integral de propiedad horizontal (conjuntos residenciales o edificios). El sistema esta disenado para facilitar la interaccion y administracion a traves de diferentes modulos basados en roles.
